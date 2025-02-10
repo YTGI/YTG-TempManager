@@ -25,8 +25,8 @@ you worked on it.</p>
 ## Deploying
 <p>This is a stand along EXE that requires the appsettings.json to be with it for the appropriate settings</p>
 
-### PowerShell
-<p><b>NOTE:</b> Must have the full path or the service will not start.</p>
-<p>sc.exe create "YTG Temp Manager Service" binpath="C:\temp\TempManager\YTG.TempManager.exe" </p>
-<p>sc.exe delete "YTG Temp Manager Service"</p>
-
+### Command Prompt (Administrator)
+<p><b>NOTE:</b> Must have the full path or preface with "%~dp0" or the service will not start.</p>
+<p><b>NOTE:</b> I have proveded an install.bat and uninstall.bat for simplification.</p>
+<p>sc create "YTG Temp Manager Service" binPath= "%~dp0YTG.TempManager.exe" start= delayed-auto</p>
+<p>sc delete "YTG Temp Manager Service"</p>
