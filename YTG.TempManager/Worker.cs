@@ -60,7 +60,7 @@ namespace YTG.TempManager
             {
                 if (m_TempTimer == null)
                 {
-                    m_TempTimer = new(6000); // Every minute
+                    m_TempTimer = new(60000); // Every minute
                 }
                 return m_TempTimer;
             }
@@ -110,8 +110,8 @@ namespace YTG.TempManager
             // Run again if it is midnight
             if (!CancelToken.IsCancellationRequested)
             {
-                DateTime now = DateTime.Now;
-                if (now.Hour == 0 && now.Minute == 0 && now.Second == 0)
+                DateTime _now = DateTime.Now;
+                if (_now.Hour == 0 && _now.Minute == 0)
                 {
                     await RunProcessesAsync();
                 }
