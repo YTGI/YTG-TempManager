@@ -10,6 +10,7 @@
 // --------------------------------------------------------------------------------
 
 using Microsoft.Extensions.Options;
+using System.Diagnostics;
 using System.Timers;
 
 namespace YTG.TempManager.Services
@@ -88,8 +89,16 @@ namespace YTG.TempManager.Services
                     blnSuccess = true;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                if (OperatingSystem.IsWindows())
+                {
+                    using (EventLog eventLog = new("Application"))
+                    {
+                        eventLog.Source = "Application";
+                        eventLog.WriteEntry(ex.Message, EventLogEntryType.Error, 101, 1);
+                    }
+                }
                 return await Task.FromResult(blnSuccess);
             }
             return await Task.FromResult(blnSuccess);
@@ -102,38 +111,53 @@ namespace YTG.TempManager.Services
         public async Task<bool> ArchiveTempFolderAsync()
         {
             bool blnSuccess = false;
-
-            string _sourceFolder = Path.GetFullPath(AppSettings.SourceFolder ?? "C:\\Temp");
-            string _destFolder = Path.GetFullPath(AppSettings.DestinationFolder ?? "C:\\Temp");
-
-            if (!(Directory.Exists(_destFolder)))
-            { Directory.CreateDirectory(_destFolder); }
-
-            foreach (string directory in Directory.GetDirectories(_sourceFolder))
+            try
             {
-                DateTime _folderDate = FolderToDate(directory);
+                string _sourceFolder = Path.GetFullPath(AppSettings.SourceFolder ?? "C:\\Temp");
+                string _destFolder = Path.GetFullPath(AppSettings.DestinationFolder ?? "C:\\Temp");
 
-                if ((_folderDate < DateTime.Now.AddDays(AppSettings.ArchiveLookbackDays * -1))
-                    && (_folderDate > DateTime.MinValue))
+                if (!(Directory.Exists(_destFolder)))
+                { Directory.CreateDirectory(_destFolder); }
+
+                foreach (string directory in Directory.GetDirectories(_sourceFolder))
                 {
-                    if ((Directory.GetFiles(directory).Count() == 0)
-                        && (Directory.GetDirectories(directory).Count() == 0))
+                    DateTime _folderDate = FolderToDate(directory);
+
+                    if ((_folderDate < DateTime.Now.AddDays(AppSettings.ArchiveLookbackDays * -1))
+                        && (_folderDate > DateTime.MinValue))
                     {
-                        // Remove read-only etc.
-                        SetAttributesNormal(new DirectoryInfo(directory));
+                        if ((Directory.GetFiles(directory).Count() == 0)
+                            && (Directory.GetDirectories(directory).Count() == 0))
+                        {
+                            // Remove read-only etc.
+                            SetAttributesNormal(new DirectoryInfo(directory));
 
-                        // The folder has nothing in it
-                        Directory.Delete(directory);
-                        continue;
-                    }
+                            // The folder has nothing in it
+                            Directory.Delete(directory);
+                            continue;
+                        }
 
-                    string strFolderName = _folderDate.ToString("yyyyMMdd");
+                        string strFolderName = _folderDate.ToString("yyyyMMdd");
 
-                    if (!Directory.Exists(Path.Combine(_destFolder, strFolderName)))
-                    {
-                        Directory.Move(directory, Path.Combine(_destFolder, strFolderName));
+                        if (!Directory.Exists(Path.Combine(_destFolder, strFolderName)))
+                        {
+                            Directory.Move(directory, Path.Combine(_destFolder, strFolderName));
+                        }
                     }
                 }
+
+            }
+            catch (Exception ex)
+            {
+                if (OperatingSystem.IsWindows())
+                {
+                    using (EventLog eventLog = new("Application"))
+                    {
+                        eventLog.Source = "Application";
+                        eventLog.WriteEntry(ex.Message, EventLogEntryType.Error, 101, 1);
+                    }
+                }
+                return await Task.FromResult(blnSuccess);
             }
 
             blnSuccess = true;
