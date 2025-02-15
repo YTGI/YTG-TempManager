@@ -39,8 +39,9 @@ namespace YTG.TempManager
 
         #region Fields
 
-        System.Timers.Timer? m_TempTimer = null;
+        private System.Timers.Timer? m_TempTimer = null;
         private CancellationTokenSource _stoppingCts;
+        private bool _hasRun = false;
 
         #endregion // Fields
 
@@ -114,6 +115,13 @@ namespace YTG.TempManager
                 if (_now.Hour == 0 && _now.Minute == 0)
                 {
                     await RunProcessesAsync();
+                }
+
+                // Run every five minutes to execute after boot
+                if (_now.Minute % 5 == 0 && !_hasRun)
+                {
+                    await RunProcessesAsync();
+                    _hasRun = true;
                 }
             }
         }
