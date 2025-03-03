@@ -7,12 +7,12 @@ namespace YTG.TempManager
         public static void Main(string[] args)
         {
             HostApplicationBuilder? builder = Host.CreateApplicationBuilder(args);
-            builder.Services.AddHostedService<Worker>();
-
             builder.Services.AddWindowsService(options =>
             {
                 options.ServiceName = "YTG Temp Manager Service";
             });
+
+            builder.Services.AddHostedService<Worker>();
 
             ConfigurationBuilder _configuration = new();
             IConfiguration _configurationBuilder = _configuration

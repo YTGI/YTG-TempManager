@@ -2,14 +2,15 @@
 
 	<PropertyGroup>
 		<TargetFramework>net9.0</TargetFramework>
+		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<UserSecretsId>dotnet-YTG.TempManager-7dae78d5-7ee8-4f57-84ea-f3187809106c</UserSecretsId>
 		<Company>Yasgar Technology Group, Inc.</Company>
 		<Description>Manage the creation and archive of date named folders.</Description>
-		<Version>1.0.1</Version>
-		<AssemblyVersion>1.0.1.0</AssemblyVersion>
-		<FileVersion>1.0.1.0</FileVersion>
+		<Version>1.0.2</Version>
+		<AssemblyVersion>1.0.2.0</AssemblyVersion>
+		<FileVersion>1.0.2.0</FileVersion>
 	</PropertyGroup>
 
 	<ItemGroup>

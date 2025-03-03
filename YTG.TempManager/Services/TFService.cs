@@ -95,10 +95,11 @@ namespace YTG.TempManager.Services
                 {
                     using (EventLog eventLog = new("Application"))
                     {
-                        eventLog.Source = "Application";
+                        eventLog.Source = "YTG Temp Manager Service";
                         eventLog.WriteEntry(ex.Message, EventLogEntryType.Error, 101, 1);
                     }
                 }
+
                 return await Task.FromResult(blnSuccess);
             }
             return await Task.FromResult(blnSuccess);
@@ -153,10 +154,11 @@ namespace YTG.TempManager.Services
                 {
                     using (EventLog eventLog = new("Application"))
                     {
-                        eventLog.Source = "Application";
+                        eventLog.Source = "YTG Temp Manager Service";
                         eventLog.WriteEntry(ex.Message, EventLogEntryType.Error, 101, 1);
                     }
                 }
+
                 return await Task.FromResult(blnSuccess);
             }
 

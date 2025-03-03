@@ -15,6 +15,8 @@ using System.Timers;
 
 using YTG.TempManager.Services;
 
+using System.Diagnostics;
+
 namespace YTG.TempManager
 {
 
@@ -83,6 +85,14 @@ namespace YTG.TempManager
         /// <returns></returns>
         protected override async Task ExecuteAsync(CancellationToken cancelToken)
         {
+            if (OperatingSystem.IsWindows())
+            {
+                using (EventLog eventLog = new("Application"))
+                {
+                    eventLog.Source = "YTG Temp Manager Service";
+                }
+            }
+
             CancelToken = cancelToken;
 
             if (!CancelToken.IsCancellationRequested)
@@ -93,7 +103,6 @@ namespace YTG.TempManager
                 await RunProcessesAsync();
 
             }
-
         }
 
 
@@ -133,7 +142,7 @@ namespace YTG.TempManager
         /// <returns></returns>
         private async Task RunProcessesAsync()
         {
-           await TFSvc.RunProcessesAsync(CancelToken);
+            await TFSvc.RunProcessesAsync(CancelToken);
         }
 
         #endregion Private Methods
