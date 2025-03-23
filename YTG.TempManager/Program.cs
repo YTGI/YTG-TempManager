@@ -1,41 +1,36 @@
 using YTG.TempManager.Services;
 
-namespace YTG.TempManager
 {
-    public class Program
+    HostApplicationBuilder? builder = Host.CreateApplicationBuilder(args);
+
+    builder.Services.AddHostedService<YTG.TempManager.Worker>();
+
+    builder.Services.AddWindowsService(options =>
     {
-        public static void Main(string[] args)
+        options.ServiceName = "YTG Temp Manager Service";
+    });
+
+    ConfigurationBuilder _configuration = new();
+    IConfiguration _configurationBuilder = _configuration
+        .AddJsonFile("appsettings.json")
+        .AddEnvironmentVariables()
+        .Build();
+
+    builder.Services.Configure<YTG.TempManager.YTGAppSettings>(_configurationBuilder.GetSection("AppSettings"));
+    builder.Services.AddSingleton<ITFService, TFService>();
+
+    IHostBuilder _host = Host.CreateDefaultBuilder(args)
+        .ConfigureLogging(logging =>
         {
-            HostApplicationBuilder? builder = Host.CreateApplicationBuilder(args);
-            builder.Services.AddWindowsService(options =>
+            logging.ClearProviders();
+            logging.AddConsole();
+            if (OperatingSystem.IsWindows())
             {
-                options.ServiceName = "YTG Temp Manager Service";
-            });
+                logging.AddEventLog();
+            }
+        });
 
-            builder.Services.AddHostedService<Worker>();
+    var host = builder.Build();
+    await host.RunAsync();
 
-            ConfigurationBuilder _configuration = new();
-            IConfiguration _configurationBuilder = _configuration
-                .AddJsonFile("appsettings.json")
-                .AddEnvironmentVariables()
-                .Build();
-
-            builder.Services.Configure<YTGAppSettings>(_configurationBuilder.GetSection("AppSettings"));
-            builder.Services.AddSingleton<ITFService, TFService>();
-
-            IHostBuilder _host = Host.CreateDefaultBuilder(args)
-                .ConfigureLogging(logging =>
-                {
-                    logging.ClearProviders();
-                    logging.AddConsole();
-                    if (OperatingSystem.IsWindows())
-                    {
-                        logging.AddEventLog();
-                    }
-                });
-
-            var host = builder.Build();
-            host.Run();
-        }
-    }
 }

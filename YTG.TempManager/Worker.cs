@@ -16,6 +16,7 @@ using System.Timers;
 using YTG.TempManager.Services;
 
 using System.Diagnostics;
+using Microsoft.Extensions.Logging;
 
 namespace YTG.TempManager
 {
@@ -23,21 +24,8 @@ namespace YTG.TempManager
     /// <summary>
     /// Main Background worker class
     /// </summary>
-    public class Worker : BackgroundService
+    public class Worker(ITFService TFSvc) : BackgroundService
     {
-
-        #region Constructors
-
-        /// <summary>
-        /// Default constructor
-        /// </summary>
-        /// <param name="tfService"></param>
-        public Worker(ITFService tfService)
-        {
-            TFSvc = tfService;
-        }
-
-        #endregion Constructors
 
         #region Fields
 
@@ -48,11 +36,6 @@ namespace YTG.TempManager
         #endregion // Fields
 
         #region Properties
-
-        /// <summary>
-        /// Gets instance of ITFService from DI
-        /// </summary>
-        private ITFService TFSvc { get; }
 
         /// <summary>
         /// Gets the timer to start checking every 1 minute
@@ -85,23 +68,50 @@ namespace YTG.TempManager
         /// <returns></returns>
         protected override async Task ExecuteAsync(CancellationToken cancelToken)
         {
-            if (OperatingSystem.IsWindows())
+            try
             {
-                using (EventLog eventLog = new("Application"))
-                {
-                    eventLog.Source = "YTG Temp Manager Service";
-                }
-            }
 
-            CancelToken = cancelToken;
+                //if (OperatingSystem.IsWindows())
+                //{
+                //    using (EventLog eventLog = new("Application"))
+                //    {
+                //        eventLog.Source = "YTG Temp Manager Service";
+                //    }
+                //}
 
-            if (!CancelToken.IsCancellationRequested)
-            {
+                CancelToken = cancelToken;
+
                 TempTimer.Elapsed += TempTimerElapsedAsync;
                 TempTimer.Start();
 
                 await RunProcessesAsync();
 
+            }
+            catch (OperationCanceledException)
+            {
+                // When the stopping token is canceled, for example, a call made from services.msc,
+                // we shouldn't exit with a non-zero exit code. In other words, this is expected...
+            }
+            catch (Exception ex)
+            {
+                if (OperatingSystem.IsWindows())
+                {
+                    using (EventLog eventLog = new("Application"))
+                    {
+                        eventLog.Source = "YTG Temp Manager Service";
+                        eventLog.WriteEntry(ex.Message, EventLogEntryType.Error, 101, 1);
+                    }
+                }
+
+                // Terminates this process and returns an exit code to the operating system.
+                // This is required to avoid the 'BackgroundServiceExceptionBehavior', which
+                // performs one of two scenarios:
+                // 1. When set to "Ignore": will do nothing at all, errors cause zombie services.
+                // 2. When set to "StopHost": will cleanly stop the host, and log errors.
+                //
+                // In order for the Windows Service Management system to leverage configured
+                // recovery options, we need to terminate the process with a non-zero exit code.
+                Environment.Exit(1);
             }
         }
 
