@@ -9,14 +9,10 @@
 */
 // --------------------------------------------------------------------------------
 
-using Microsoft.Extensions.Options;
-
+using System.Diagnostics;
 using System.Timers;
 
 using YTG.TempManager.Services;
-
-using System.Diagnostics;
-using Microsoft.Extensions.Logging;
 
 namespace YTG.TempManager
 {
@@ -30,8 +26,6 @@ namespace YTG.TempManager
         #region Fields
 
         private System.Timers.Timer? m_TempTimer = null;
-        private CancellationTokenSource _stoppingCts;
-        private bool _hasRun = false;
 
         #endregion // Fields
 
@@ -70,30 +64,24 @@ namespace YTG.TempManager
         {
             try
             {
-
-                //if (OperatingSystem.IsWindows())
-                //{
-                //    using (EventLog eventLog = new("Application"))
-                //    {
-                //        eventLog.Source = "YTG Temp Manager Service";
-                //    }
-                //}
-
                 CancelToken = cancelToken;
 
                 TempTimer.Elapsed += TempTimerElapsedAsync;
                 TempTimer.Start();
 
-                await RunProcessesAsync();
+                // await RunProcessesAsync();
 
             }
             catch (OperationCanceledException)
             {
                 // When the stopping token is canceled, for example, a call made from services.msc,
                 // we shouldn't exit with a non-zero exit code. In other words, this is expected...
+                Environment.Exit(0);
             }
             catch (Exception ex)
             {
+                File.WriteAllText("C:\\Temp\\YTG.TempManager.Service-ExecuteAsync.log", ex.ToString());
+
                 if (OperatingSystem.IsWindows())
                 {
                     using (EventLog eventLog = new("Application"))
@@ -127,20 +115,14 @@ namespace YTG.TempManager
         /// <param name="e"></param>
         private async void TempTimerElapsedAsync(object? sender, ElapsedEventArgs e)
         {
-            // Run again if it is midnight
             if (!CancelToken.IsCancellationRequested)
             {
                 DateTime _now = DateTime.Now;
-                if (_now.Hour == 0 && _now.Minute == 0)
-                {
-                    await RunProcessesAsync();
-                }
 
                 // Run every five minutes to execute after boot
-                if (_now.Minute % 5 == 0 && !_hasRun)
+                if (_now.Minute % 5 == 0)
                 {
                     await RunProcessesAsync();
-                    _hasRun = true;
                 }
             }
         }

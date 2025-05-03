@@ -1,36 +1,34 @@
 using YTG.TempManager.Services;
 
+HostApplicationBuilder? builder = Host.CreateApplicationBuilder(args);
+
+builder.Services.AddHostedService<YTG.TempManager.Worker>();
+
+builder.Services.AddWindowsService(options =>
 {
-    HostApplicationBuilder? builder = Host.CreateApplicationBuilder(args);
+    options.ServiceName = "YTG Temp Manager Service";
+});
 
-    builder.Services.AddHostedService<YTG.TempManager.Worker>();
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+if (OperatingSystem.IsWindows())
+{
+    builder.Logging.AddEventLog();
+}
 
-    builder.Services.AddWindowsService(options =>
-    {
-        options.ServiceName = "YTG Temp Manager Service";
-    });
+builder.Services.Configure<YTG.TempManager.YTGAppSettings>(builder.Configuration.GetSection("AppSettings"));
 
-    ConfigurationBuilder _configuration = new();
-    IConfiguration _configurationBuilder = _configuration
-        .AddJsonFile("appsettings.json")
-        .AddEnvironmentVariables()
-        .Build();
+builder.Services.AddSingleton<ITFService, TFService>();
 
-    builder.Services.Configure<YTG.TempManager.YTGAppSettings>(_configurationBuilder.GetSection("AppSettings"));
-    builder.Services.AddSingleton<ITFService, TFService>();
+using IHost? host = builder.Build();
 
-    IHostBuilder _host = Host.CreateDefaultBuilder(args)
-        .ConfigureLogging(logging =>
-        {
-            logging.ClearProviders();
-            logging.AddConsole();
-            if (OperatingSystem.IsWindows())
-            {
-                logging.AddEventLog();
-            }
-        });
-
-    var host = builder.Build();
+try
+{
     await host.RunAsync();
-
+}
+catch (Exception ex)
+{
+    //Stop error from being logged to event viewer when the windows service is stopped
+    File.WriteAllText("C:\\Temp\\YTG.TempManager.Service-Program.log", ex.ToString());
+    Environment.ExitCode = 0;
 }
