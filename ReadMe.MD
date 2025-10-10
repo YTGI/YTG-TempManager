@@ -2,7 +2,7 @@
 
 # YTG-TempManager
 <p>Yasgar Technology Group Temp folder management application</p>
-<p>.NET 9.0</p>
+<p>.NET 8.0</p>
 <p>Console application utilizing dependency injection</p>
 </br>
 
