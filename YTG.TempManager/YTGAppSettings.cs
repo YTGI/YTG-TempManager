@@ -17,7 +17,5 @@ namespace YTG.TempManager
         public string? SourceFolder { get; set; }
         public string? DestinationFolder { get; set; }
         public int ArchiveLookbackDays { get; set; } = 14;
-        public string? ApplicationUniqueId { get; set; }
-        public string? ApplicationShortName { get; set; }
     }
 }
